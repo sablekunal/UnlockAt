@@ -1,0 +1,7 @@
+PROJECT_PLAN.txt
+node_modules/
+package-lock.json
+.env
+.vercel/
+scripts/test-api.js
+scripts/test-core.js
