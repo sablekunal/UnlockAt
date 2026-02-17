@@ -1,7 +1,7 @@
 import { kv } from '@vercel/kv';
+import { localStore } from './_storage.js';
 
 export default async function handler(req, res) {
-    // Basic support for both GET (for easy testing) and POST
     const keyId = req.query.keyId || req.body?.keyId;
 
     if (!keyId) {
@@ -9,7 +9,12 @@ export default async function handler(req, res) {
     }
 
     try {
-        const data = await kv.get(`unlockat:${keyId}`);
+        let data;
+        if (process.env.KV_REST_API_URL) {
+            data = await kv.get(`unlockat:${keyId}`);
+        } else {
+            data = localStore.get(`unlockat:${keyId}`);
+        }
 
         if (!data) {
             return res.status(404).json({ error: 'Key not found' });
@@ -27,7 +32,6 @@ export default async function handler(req, res) {
             });
         }
 
-        // Time gate passed! Release the key fragment.
         return res.status(200).json({
             fragmentB,
             status: 'unlocked'
