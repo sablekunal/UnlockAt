@@ -29,8 +29,7 @@ UnlockAt is built on a **Zero-Knowledge Architecture**. Neither the server nor a
 
 ### Installation
 ```bash
-npm install
-npm link
+npm install -g @sablekunal/unlockat
 ```
 
 ### 💻 CLI Usage

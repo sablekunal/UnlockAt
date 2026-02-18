@@ -1,16 +1,41 @@
 {
-    "name": "unlockat",
-    "version": "0.1.0",
-    "description": "Secure, Time-Gated File Encryption",
+    "name": "@sablekunal/unlockat",
+    "version": "1.0.0",
+    "description": "Secure, Time-Gated File Encryption system with a Zero-Knowledge Time Oracle.",
     "type": "module",
+    "author": "Kunal (sablekunal)",
+    "license": "MIT",
+    "keywords": [
+        "encryption",
+        "time-gate",
+        "security",
+        "zero-knowledge",
+        "cli",
+        "privacy"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sablekunal/UnlockAt.git"
+    },
+    "bugs": {
+        "url": "https://github.com/sablekunal/UnlockAt/issues"
+    },
+    "homepage": "https://github.com/sablekunal/UnlockAt#readme",
     "main": "index.js",
     "bin": {
         "unlockat": "bin/unlockat.js"
     },
+    "files": [
+        "bin/",
+        "lib/",
+        "api/",
+        "README.md",
+        "package.json"
+    ],
     "scripts": {
         "dev": "concurrently \"node scripts/local-api-server.js\" \"cd frontend && npm run dev\"",
         "build": "cd frontend && npm run build",
-        "test": "node scripts/test-core.js"
+        "test": "node scripts/security-audit.js"
     },
     "dependencies": {
         "@vercel/kv": "^3.0.0",
@@ -22,5 +47,8 @@
     },
     "devDependencies": {
         "concurrently": "^9.2.1"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }
