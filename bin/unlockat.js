@@ -8,7 +8,7 @@ import { generateMasterKey, encryptBuffer, decryptBuffer, splitKey, combineKeys 
 import { createBundle, parseBundle } from '../lib/bundle.js';
 
 const program = new Command();
-const API_BASE = 'https://unlockat.vercel.app/api'; // Point to production API or local
+const API_BASE = process.env.UNLOCKAT_API_URL || 'http://localhost:3000/api';
 
 program
     .name('unlockat')
@@ -28,7 +28,7 @@ program
             const masterKey = generateMasterKey();
             const { fragmentA, fragmentB } = splitKey(masterKey);
 
-            const { iv, authTag, encryptedData } = encryptBuffer(buffer, masterKey);
+            const { iv, encryptedData } = encryptBuffer(buffer, masterKey);
 
             console.log(chalk.yellow('🛰️ Sending Fragment B to Time Oracle...'));
 
@@ -42,7 +42,8 @@ program
             });
 
             if (!response.ok) {
-                throw new Error(`Server error: ${response.statusText}`);
+                const errBody = await response.json().catch(() => ({}));
+                throw new Error(errBody.error || `Server error: ${response.statusText}`);
             }
 
             const { keyId } = await response.json();
@@ -53,7 +54,7 @@ program
                 unlockDate: date
             };
 
-            const bundle = createBundle(encryptedData, fragmentA, iv, authTag, metadata);
+            const bundle = createBundle(encryptedData, fragmentA, iv, metadata);
             const outPath = `${file}.unlockat`;
             await fs.writeFile(outPath, bundle);
 
@@ -89,14 +90,16 @@ program
             }
 
             if (!response.ok) {
-                throw new Error(`Server error: ${response.statusText}`);
+                const errBody = await response.json().catch(() => ({}));
+                throw new Error(errBody.error || `Server error: ${response.statusText}`);
             }
 
             const { fragmentB } = await response.json();
             const fragBBuf = Buffer.from(fragmentB, 'hex');
 
+            console.log(chalk.blue('🔑 Reconstructing key and decrypting locally...'));
             const reconstructedKey = combineKeys(parsed.fragmentA, fragBBuf);
-            const decrypted = decryptBuffer(parsed.encryptedData, reconstructedKey, parsed.iv, parsed.authTag);
+            const decrypted = decryptBuffer(parsed.encryptedData, reconstructedKey, parsed.iv);
 
             const outPath = parsed.metadata.originalName || 'decrypted_file';
             await fs.writeFile(outPath, decrypted);

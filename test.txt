@@ -1,0 +1,9 @@
+UnlockAt Security Test File
+=========================
+Timestamp: 2026-02-28
+Status: Verified Hardened
+Encryption: AES-256-GCM
+Time-Oracle: Enabled
+
+This file was created to verify the complete end-to-end encryption and time-gated decryption pipeline.
+If you are reading this, the decryption was successful! 🚀
