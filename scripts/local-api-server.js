@@ -1,15 +1,30 @@
 import http from 'node:http';
 import { parse } from 'node:url';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import storeKeyHandler from '../api/store-key.js';
 import requestKeyHandler from '../api/request-key.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3000;
+const WEB_DIR = path.join(__dirname, '../web');
+
+const MIME_TYPES = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpg',
+    '.svg': 'image/svg+xml',
+};
 
 const server = http.createServer(async (req, res) => {
     const parsedUrl = parse(req.url, true);
     const pathname = parsedUrl.pathname;
 
-    console.log(`[API] ${req.method} ${pathname}`);
+    console.log(`[API/Static] ${req.method} ${pathname}`);
 
     // Mock Vercel response object
     const vercelRes = {
@@ -38,8 +53,39 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // Mock Vercel request object
-    const vercelReq = {
+    // API Handlers
+    if (pathname === '/api/store-key') {
+        const vercelReq = await createVercelReq(req, parsedUrl);
+        return await storeKeyHandler(vercelReq, vercelRes);
+    }
+
+    if (pathname === '/api/request-key') {
+        const vercelReq = await createVercelReq(req, parsedUrl);
+        return await requestKeyHandler(vercelReq, vercelRes);
+    }
+
+    // Static File Serving
+    try {
+        let filePath = path.join(WEB_DIR, pathname === '/' ? 'index.html' : pathname);
+        const ext = path.extname(filePath);
+        const content = await fs.readFile(filePath);
+        res.setHeader('Content-Type', MIME_TYPES[ext] || 'application/octet-stream');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.end(content);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'Not Found' }));
+        } else {
+            console.error('Static Server Error:', err);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: 'Internal Server Error' }));
+        }
+    }
+});
+
+async function createVercelReq(req, parsedUrl) {
+    return {
         method: req.method,
         query: parsedUrl.query,
         body: await new Promise((resolve) => {
@@ -54,23 +100,9 @@ const server = http.createServer(async (req, res) => {
             });
         })
     };
-
-    try {
-        if (pathname === '/api/store-key') {
-            await storeKeyHandler(vercelReq, vercelRes);
-        } else if (pathname === '/api/request-key') {
-            await requestKeyHandler(vercelReq, vercelRes);
-        } else {
-            res.statusCode = 404;
-            res.end(JSON.stringify({ error: 'Not Found' }));
-        }
-    } catch (err) {
-        console.error('API Error:', err);
-        res.statusCode = 500;
-        res.end(JSON.stringify({ error: 'Internal Server Error' }));
-    }
-});
+}
 
 server.listen(PORT, () => {
-    console.log(`\x1b[32m✔ Local API Server running at http://localhost:${PORT}\x1b[0m`);
+    console.log(`\x1b[32m✔ UnlockAt Unified Server running at http://localhost:${PORT}\x1b[0m`);
+    console.log(`\x1b[36mℹ Serving Web UI from: ${WEB_DIR}\x1b[0m`);
 });

@@ -62,4 +62,6 @@ Navigate to `http://localhost:5173`. Toggle to **"Open File"** to decrypt using 
 ## 📜 Authors
 Developed with passion for secure decentralized tools.
 
-*UnlockAt — Because some things are better left for later.*
+*UnlockAt - Because some things are better left for later.*
+
+> Once a legend said, "*Ajj kare so kal kar, kal kare so parso. Itni jaldi kya hai, jab jeena hai barson!*"

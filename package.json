@@ -33,8 +33,8 @@
         "package.json"
     ],
     "scripts": {
-        "dev": "concurrently \"node scripts/local-api-server.js\" \"cd frontend && npm run dev\"",
-        "build": "cd frontend && npm run build",
+        "start": "node scripts/local-api-server.js",
+        "dev": "node scripts/local-api-server.js",
         "test": "node scripts/security-audit.js"
     },
     "dependencies": {

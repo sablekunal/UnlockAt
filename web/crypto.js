@@ -1,5 +1,5 @@
 /**
- * Browser-compatible cryptographic engine using Web Crypto API (SubtleCrypto).
+ * Browser-compatible cryptographic engine using Web Crypto API.
  */
 
 export async function generateMasterKey() {
@@ -21,7 +21,6 @@ export async function encryptBuffer(buffer, key) {
     return {
         iv,
         encryptedData: new Uint8Array(encryptedData),
-        // Web Crypto handles auth tags internally in the result buffer (last 16 bytes for GCM)
     };
 }
 
@@ -64,7 +63,6 @@ export async function combineKeys(fragmentA, fragmentB) {
     );
 }
 
-// Utility to convert hex strings to Uint8Array and vice-versa
 export function bufToHex(buffer) {
     return Array.from(buffer)
         .map(b => b.toString(16).padStart(2, '0'))
