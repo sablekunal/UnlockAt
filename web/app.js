@@ -5,6 +5,21 @@ let mode = 'lock'; // 'lock' or 'unlock'
 let currentFile = null;
 let isProcessing = false;
 
+async function checkHealth() {
+    try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        if (data.environment === 'production' && !data.hasKV) {
+            addLog('🛑 CRITICAL: Vercel KV not connected! Files locked here will NOT be retrievable.', 'error');
+            addLog('Please link a KV database in your Vercel Dashboard.', 'error');
+        } else {
+            addLog(`System active. Storage: ${data.storage}`);
+        }
+    } catch (e) {
+        addLog('System ready (Offline mode)');
+    }
+}
+
 // --- DOM Elements ---
 const el = {
     modeLock: document.getElementById('mode-lock'),
@@ -185,7 +200,12 @@ async function runLock() {
     });
 
     if (!response.ok) throw new Error('Cloud Storage failed');
-    const { keyId } = await response.json();
+    const { keyId, storage } = await response.json();
+
+    if (storage === 'memory-fallback') {
+        addLog('⚠️ WARNING: Vercel KV not detected. Key is temporary and will be lost soon!', 'error');
+    }
+
     addLog(`✅ Server accepted Fragment B. KeyID: ${keyId}`, 'success');
 
     const bundle = createWebBundle(encryptedData, fragmentA, iv, { filename: currentFile.name, keyId, unlockDate: el.unlockDate.value });
@@ -245,3 +265,5 @@ el.resetBtn.onclick = () => {
     addLog('Ready for next operation.');
     updateUI();
 };
+
+checkHealth();

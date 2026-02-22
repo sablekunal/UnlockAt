@@ -43,19 +43,18 @@ unlockat lock secret.pdf "2026-03-01 12:00:00"
 unlockat open secret.pdf.unlockat
 ```
 
-### 🌐 Web Dashboard
-Run the development server to access the premium UI:
-```bash
-npm run dev
-```
-Navigate to `http://localhost:5173`. Toggle to **"Open File"** to decrypt using the browser's hardware-accelerated crypto.
+### 🌐 High-Performance Web Dashboard
+UnlockAt features a unified, build-less web interface optimized for SEO and speed.
+- **Access**: Run `npm start` and visit `http://localhost:3000`.
+- **SEO Ready**: Pure HTML/JS structure allows search engines to fully index the application.
+- **Zero-Dependency**: No more complex frontend build steps or bloated `node_modules`.
 
 ---
 
 ## 🛠️ Tech Stack
--   **Frontend**: React, Tailwind CSS, Lucide Icons
--   **Backend**: Node.js, Vercel Functions, Vercel KV
--   **Crypto**: Web Crypto API (Browser), `node:crypto` (CLI)
+- **Frontend**: Vanilla HTML5, CSS3, ES6 Modules.
+- **Backend**: Node.js APIs (Ready for any Node.js environment).
+- **Security**: AES-256-GCM, XOR Secret Sharing.
 
 ---
 

@@ -64,6 +64,18 @@ const server = http.createServer(async (req, res) => {
         return await requestKeyHandler(vercelReq, vercelRes);
     }
 
+    if (pathname === '/api/health') {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.end(JSON.stringify({
+            status: 'ok',
+            environment: 'development',
+            storage: 'volatile (memory)',
+            hasKV: false
+        }));
+        return;
+    }
+
     // Static File Serving
     try {
         let filePath = path.join(WEB_DIR, pathname === '/' ? 'index.html' : pathname);
