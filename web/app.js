@@ -9,11 +9,12 @@ async function checkHealth() {
     try {
         const res = await fetch('/api/health');
         const data = await res.json();
-        if (data.environment === 'production' && !data.hasKV) {
-            addLog('🛑 CRITICAL: Vercel KV not connected! Files locked here will NOT be retrievable.', 'error');
-            addLog('Please link a KV database in your Vercel Dashboard.', 'error');
+        if (data.environment === 'production' && !data.hasPersistence) {
+            addLog('🛑 CRITICAL: Vercel storage not connected!', 'error');
+            addLog('Environment found: ' + data.foundVars.join(', ') || 'None', 'error');
+            addLog('Please verify UNLOCKAT_REDIS_URL in Vercel.', 'error');
         } else {
-            addLog(`System active. Storage: ${data.storage}`);
+            addLog(`System active. Storage: ${data.storageType}`);
         }
     } catch (e) {
         addLog('System ready (Offline mode)');

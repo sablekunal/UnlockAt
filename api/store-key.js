@@ -1,6 +1,5 @@
-import { kv } from '@vercel/kv';
 import { randomBytes } from 'node:crypto';
-import { localStore } from './_storage.js';
+import { getStorage } from './_storage.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -26,19 +25,14 @@ export default async function handler(req, res) {
             targetTimestamp
         };
 
-        // Use Vercel KV if configured, otherwise fallback to memory
-        if (process.env.KV_REST_API_URL) {
-            await kv.set(`unlockat:${keyId}`, data);
-        } else {
-            console.warn('⚠️ KV_REST_API_URL not found. Using local memory fallback.');
-            localStore.set(`unlockat:${keyId}`, data);
-        }
+        const storage = getStorage();
+        await storage.set(`unlockat:${keyId}`, data);
 
         return res.status(200).json({
             keyId,
             status: 'locked',
             unlockDate: new Date(targetTimestamp).toISOString(),
-            storage: process.env.KV_REST_API_URL ? 'vercel-kv' : 'memory-fallback'
+            storage: storage.type
         });
     } catch (error) {
         console.error('Store key error:', error);

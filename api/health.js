@@ -1,11 +1,19 @@
 export default async function handler(req, res) {
     const isVercel = !!process.env.VERCEL;
-    const hasKV = !!process.env.KV_REST_API_URL;
+
+    // Check for any common Redis/KV environment variables
+    const redisVars = Object.keys(process.env).filter(key =>
+        key.includes('REDIS') || key.includes('KV_')
+    );
+
+    const hasPersistence = redisVars.length > 0;
+    const storageStatus = hasPersistence ? 'persistent' : 'volatile (memory)';
 
     return res.status(200).json({
         status: 'ok',
         environment: isVercel ? 'production' : 'development',
-        storage: hasKV ? 'persistent (vercel-kv)' : 'volatile (memory)',
-        hasKV
+        storage: storageStatus,
+        foundVars: redisVars, // Show which variables were found for debugging
+        hasKV: hasPersistence
     });
 }

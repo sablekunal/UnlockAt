@@ -1,5 +1,4 @@
-import { kv } from '@vercel/kv';
-import { localStore } from './_storage.js';
+import { getStorage } from './_storage.js';
 
 export default async function handler(req, res) {
     const keyId = req.query.keyId || req.body?.keyId;
@@ -9,12 +8,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        let data;
-        if (process.env.KV_REST_API_URL) {
-            data = await kv.get(`unlockat:${keyId}`);
-        } else {
-            data = localStore.get(`unlockat:${keyId}`);
-        }
+        const storage = getStorage();
+        const data = await storage.get(`unlockat:${keyId}`);
 
         if (!data) {
             return res.status(404).json({ error: 'Key not found' });
