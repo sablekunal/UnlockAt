@@ -23,7 +23,8 @@ export default async function handler(req, res) {
             return res.status(403).json({
                 error: 'File is still locked',
                 remainingSeconds: remainingSecs,
-                unlockDate: new Date(targetTimestamp).toISOString()
+                unlockDate: new Date(targetTimestamp).toISOString(),
+                serverTime: new Date(now).toISOString()
             });
         }
 

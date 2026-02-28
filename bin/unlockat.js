@@ -37,7 +37,7 @@ program
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     fragmentB: fragmentB.toString('hex'),
-                    targetDate: date
+                    targetTimestamp: new Date(date).getTime()
                 })
             });
 
@@ -51,14 +51,19 @@ program
             const metadata = {
                 originalName: path.basename(file),
                 keyId,
-                unlockDate: date
+                targetTimestamp: new Date(date).getTime()
             };
 
             const bundle = createBundle(encryptedData, fragmentA, iv, metadata);
             const outPath = `${file}.unlockat`;
             await fs.writeFile(outPath, bundle);
 
+            const localDate = new Date(metadata.targetTimestamp);
+            const offset = -localDate.getTimezoneOffset() / 60;
+            const offsetStr = `GMT${offset >= 0 ? '+' : ''}${offset}`;
+
             console.log(chalk.green('✨ Success! File is now time-locked.'));
+            console.log(chalk.dim(`Unlock Date: ${localDate.toLocaleString()} (${offsetStr})`));
             console.log(chalk.dim(`Key ID: ${keyId}`));
             console.log(chalk.dim(`Output: ${outPath}`));
         } catch (err) {
@@ -83,9 +88,13 @@ program
 
             if (response.status === 403) {
                 const body = await response.json();
+                const unlockDate = new Date(body.unlockDate);
+                const offset = -unlockDate.getTimezoneOffset() / 60;
+                const offsetStr = `GMT${offset >= 0 ? '+' : ''}${offset}`;
+
                 console.log(chalk.red('🛑 Access Denied: File is still locked.'));
                 console.log(chalk.dim(`Remaining: ${body.remainingSeconds} seconds`));
-                console.log(chalk.dim(`Unlock Date: ${body.unlockDate}`));
+                console.log(chalk.dim(`Unlock Date: ${unlockDate.toLocaleString()} (${offsetStr})`));
                 return;
             }
 

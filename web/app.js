@@ -152,9 +152,10 @@ async function handleFile(file) {
             const buffer = new Uint8Array(await file.arrayBuffer());
             const { metadata } = parseWebBundle(buffer);
             el.metaFilename.textContent = metadata.filename || 'Unknown';
-            el.metaDate.textContent = new Date(metadata.unlockDate).toLocaleString();
+            const unlockTimestamp = metadata.targetTimestamp || metadata.unlockDate; // Compatibility with old files
+            el.metaDate.textContent = new Date(unlockTimestamp).toLocaleString();
             el.metadataPreview.style.display = 'block';
-            addLog(`Bundle parsed. Targets: ${new Date(metadata.unlockDate).toLocaleString()}`, 'success');
+            addLog(`Bundle parsed. Targets: ${new Date(unlockTimestamp).toLocaleString()}`, 'success');
         } catch (err) {
             addLog(`Failed to parse bundle: ${err.message}`, 'error');
         }
@@ -194,10 +195,11 @@ async function runLock() {
     const { iv, encryptedData } = await encryptBuffer(buffer, masterKey);
 
     addLog('Sending Fragment B to Time Oracle...');
+    const targetTimestamp = new Date(el.unlockDate.value).getTime();
     const response = await fetch('/api/store-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fragmentB: bufToHex(fragmentB), targetDate: el.unlockDate.value })
+        body: JSON.stringify({ fragmentB: bufToHex(fragmentB), targetTimestamp })
     });
 
     if (!response.ok) throw new Error('Cloud Storage failed');
@@ -209,15 +211,24 @@ async function runLock() {
 
     addLog(`✅ Server accepted Fragment B. KeyID: ${keyId}`, 'success');
 
-    const bundle = createWebBundle(encryptedData, fragmentA, iv, { filename: currentFile.name, keyId, unlockDate: el.unlockDate.value });
+    const bundle = createWebBundle(encryptedData, fragmentA, iv, {
+        filename: currentFile.name,
+        keyId,
+        targetTimestamp
+    });
     const url = URL.createObjectURL(new Blob([bundle]));
+
+    const localDate = new Date(targetTimestamp);
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const offset = -localDate.getTimezoneOffset() / 60;
+    const offsetStr = `GMT${offset >= 0 ? '+' : ''}${offset}`;
 
     el.downloadLink.href = url;
     el.downloadLink.download = `${currentFile.name}.unlockat`;
     el.successTitle.textContent = 'File Time-Locked';
-    el.successDesc.textContent = `Unlocked on ${new Date(el.unlockDate.value).toLocaleString()}`;
+    el.successDesc.textContent = `Unlocked on ${localDate.toLocaleString()} (${timezone}, ${offsetStr})`;
     showSuccess();
-    addLog('✨ SUCCESS: Your file is now time-locked.', 'success');
+    addLog(`✨ SUCCESS: Your file is now time-locked for ${localDate.toLocaleString()} (${offsetStr}).`, 'success');
 }
 
 async function runUnlock() {
